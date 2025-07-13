@@ -33,5 +33,6 @@ y_pred = model.predict(X_test)
 print(classification_report(y_test, y_pred, target_names=y.columns))
 
 # Save model & vectorizer
-joblib.dump(model, "ml/model.pkl")
-joblib.dump(vectorizer, "ml/vectorizer.pkl")
+joblib.dump(model, "model.pkl")
+joblib.dump(vectorizer, "vectorizer.pkl")
+
