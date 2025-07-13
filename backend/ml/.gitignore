@@ -1,0 +1,6 @@
+# Ignore data and temp files
+data/
+__pycache__/
+*.ipynb_checkpoints
+*.csv
+nltk_data/
