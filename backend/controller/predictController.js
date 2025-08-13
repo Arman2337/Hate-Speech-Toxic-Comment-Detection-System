@@ -1,5 +1,6 @@
 const { spawn } = require("child_process");
-const Analysis = require("../models/Analysis");
+const path = require("path");
+const Analysis = require("../model/analysis");
 
 exports.predictText = (req, res) => {
   const { text, userId } = req.body;
@@ -8,23 +9,35 @@ exports.predictText = (req, res) => {
     return res.status(400).json({ error: "Text input is required." });
   }
 
-  const pythonProcess = spawn("python", ["./backend/ml/predict.py", text]);
+  // ✅ Correct Python script path no matter where the server is started from
+  const pythonScriptPath = path.join(__dirname, "..", "ml", "predict.py");
+
+  // ✅ Spawn Python process with correct script path and text argument
+  const pythonProcess = spawn("python", [pythonScriptPath, text], {
+    cwd: path.join(__dirname, "..", "ml"), // Ensures working directory is correct
+  });
 
   let resultData = "";
+  let errorData = "";
+
   pythonProcess.stdout.on("data", (data) => {
     resultData += data.toString();
   });
 
   pythonProcess.stderr.on("data", (data) => {
-    console.error(`Python Error: ${data}`);
+    errorData += data.toString();
   });
 
   pythonProcess.on("close", async (code) => {
     if (code !== 0) {
-      return res.status(500).json({ error: "Prediction failed" });
+      console.error(`❌ Python Script Error: ${errorData}`);
+      return res.status(500).json({ error: "Prediction failed", details: errorData });
     }
+
     try {
       const result = JSON.parse(resultData);
+
+      // ✅ Save to history if user is logged in
       if (userId) {
         const newAnalysis = new Analysis({
           userId,
@@ -33,8 +46,10 @@ exports.predictText = (req, res) => {
         });
         await newAnalysis.save();
       }
+
       res.json(result);
     } catch (e) {
+      console.error("❌ Failed to parse prediction result:", e);
       res.status(500).json({ error: "Failed to parse prediction result" });
     }
   });
