@@ -1,10 +1,6 @@
 @import "tailwindcss";
 @layer base {
    /* Removed invalid @apply border-border; */
-   * {
-     /* Add a valid Tailwind border utility if needed, e.g.: */
-     /* @apply border; */
-   } 
   
   body {
     background-color: #f8fafc; /* Replace with your background color */
