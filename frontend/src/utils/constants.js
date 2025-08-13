@@ -38,3 +38,41 @@ export const COLORS = {
   ERROR: '#EF4444',
   INFO: '#3B82F6'
 }
+
+// Add the missing EXAMPLE_TEXTS export
+export const EXAMPLE_TEXTS = [
+  {
+    label: "Clean Text Example",
+    text: "Thank you for sharing your thoughts! I really appreciate your perspective on this topic and look forward to more discussions."
+  },
+  {
+    label: "Neutral Comment",
+    text: "This is an interesting article about technology trends. The points made about AI development are quite insightful."
+  },
+  {
+    label: "Positive Feedback",
+    text: "Great work on this project! The user interface is intuitive and the features work exactly as expected."
+  },
+  {
+    label: "Constructive Criticism",
+    text: "While I appreciate the effort put into this, I think there might be room for improvement in the user experience design."
+  },
+  {
+    label: "Educational Content",
+    text: "Here's a helpful explanation of machine learning: It's a subset of AI that enables computers to learn and improve from experience."
+  }
+]
+
+export const STATUS_COLORS = {
+  CLEAN: 'text-green-400',
+  TOXIC: 'text-red-400',
+  WARNING: 'text-yellow-400',
+  PROCESSING: 'text-blue-400'
+}
+
+export const ANALYSIS_LABELS = {
+  CLEAN: 'Clean',
+  TOXIC: 'Toxic',
+  WARNING: 'Warning',
+  PROCESSING: 'Processing...'
+}
