@@ -53,3 +53,40 @@ export const toxicityService = {
     }
   }
 }
+
+// Add the missing analyzeToxicity function
+export const analyzeToxicity = async (text) => {
+  try {
+    // For development, return mock data
+    if (import.meta.env.MODE === 'development') {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      
+      const toxicityScore = Math.random() * 0.4 // Generate random score between 0-0.4
+      
+      return {
+        score: toxicityScore,
+        isToxic: toxicityScore > 0.3,
+        categories: {
+          toxic: toxicityScore,
+          severe_toxic: toxicityScore * 0.2,
+          obscene: toxicityScore * 0.3,
+          threat: toxicityScore * 0.1,
+          insult: toxicityScore * 0.4,
+          identity_hate: toxicityScore * 0.15
+        },
+        timestamp: new Date().toISOString(),
+        text: text
+      }
+    }
+    
+    // Production API call
+    const response = await api.post('/analyze', { text })
+    return response.data
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Toxicity analysis failed')
+  }
+}
+
+// Export default service object
+export default toxicityService
