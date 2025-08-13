@@ -1,52 +1,47 @@
-import React from 'react'
-import LoadingSpinner from '../common/LoadingSpinner'
+import React from 'react';
+import { motion } from 'framer-motion';
 
 const Button = ({ 
   children, 
   variant = 'primary', 
   size = 'md', 
   disabled = false, 
-  loading = false,
-  className = '',
-  onClick,
-  type = 'button',
+  className = '', 
   ...props 
 }) => {
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-4 disabled:opacity-50 disabled:cursor-not-allowed';
   
   const variants = {
-    primary: 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl',
-    secondary: 'bg-white/10 hover:bg-white/20 text-white border border-white/30',
-    outline: 'border border-white/30 text-white hover:bg-white/10',
-    ghost: 'text-white/80 hover:text-white hover:bg-white/5',
-    danger: 'bg-red-600 hover:bg-red-700 text-white'
-  }
+    primary: 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl focus:ring-blue-300',
+    secondary: 'bg-gray-100 hover:bg-gray-200 text-gray-800 focus:ring-gray-300',
+    outline: 'border-2 border-gray-300 hover:border-gray-400 text-gray-700 bg-white hover:bg-gray-50 focus:ring-gray-300',
+    danger: 'bg-red-500 hover:bg-red-600 text-white shadow-lg hover:shadow-xl focus:ring-red-300',
+    success: 'bg-green-500 hover:bg-green-600 text-white shadow-lg hover:shadow-xl focus:ring-green-300'
+  };
   
   const sizes = {
     sm: 'px-3 py-1.5 text-sm',
     md: 'px-4 py-2 text-sm',
     lg: 'px-6 py-3 text-base',
     xl: 'px-8 py-4 text-lg'
-  }
+  };
 
   return (
-    <button
-      type={type}
-      disabled={disabled || loading}
-      onClick={onClick}
+    <motion.button
+      whileHover={{ scale: disabled ? 1 : 1.05 }}
+      whileTap={{ scale: disabled ? 1 : 0.95 }}
       className={`
         ${baseClasses}
         ${variants[variant]}
         ${sizes[size]}
-        ${disabled || loading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}
         ${className}
       `}
+      disabled={disabled}
       {...props}
     >
-      {loading && <LoadingSpinner size="sm" className="mr-2" />}
       {children}
-    </button>
-  )
-}
+    </motion.button>
+  );
+};
 
-export default Button
+export default Button;
