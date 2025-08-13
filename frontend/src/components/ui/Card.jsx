@@ -1,18 +1,21 @@
-import React from 'react'
+import React from 'react';
+import { motion } from 'framer-motion';
 
-const Card = ({ children, className = '', hover = false, ...props }) => {
+const Card = ({ children, className = '', hover = true, ...props }) => {
   return (
-    <div
+    <motion.div
+      whileHover={hover ? { y: -2, scale: 1.02 } : {}}
+      transition={{ duration: 0.2 }}
       className={`
-        glass-card p-6
-        ${hover ? 'hover:bg-white/20 transition-all duration-300 hover:scale-[1.02]' : ''}
+        bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-white/20
+        ${hover ? 'hover:shadow-xl' : ''}
         ${className}
       `}
       {...props}
     >
       {children}
-    </div>
-  )
-}
+    </motion.div>
+  );
+};
 
-export default Card
+export default Card;
