@@ -1,54 +1,74 @@
-import React from 'react'
+import React from 'react';
+import { motion } from 'framer-motion';
 
-const ToxicityMeter = ({ score = 0, size = 'md' }) => {
-  const percentage = Math.min(Math.max(score * 100, 0), 100)
+const ToxicityMeter = ({ score }) => {
+  const safetyPercentage = Math.round((1 - score) * 100);
   
-  const getColor = (score) => {
-    if (score < 0.3) return 'text-green-400'
-    if (score < 0.6) return 'text-yellow-400'
-    return 'text-red-400'
-  }
+  let color = 'green';
+  let bgColor = 'bg-green-500';
+  let textColor = 'text-green-700';
   
-  const getBarColor = (score) => {
-    if (score < 0.3) return 'bg-green-400'
-    if (score < 0.6) return 'bg-yellow-400'
-    return 'bg-red-400'
-  }
-
-  const sizes = {
-    sm: 'w-24 h-24',
-    md: 'w-32 h-32',
-    lg: 'w-40 h-40'
+  if (safetyPercentage < 50) {
+    color = 'red';
+    bgColor = 'bg-red-500';
+    textColor = 'text-red-700';
+  } else if (safetyPercentage < 80) {
+    color = 'yellow';
+    bgColor = 'bg-yellow-500';
+    textColor = 'text-yellow-700';
   }
 
   return (
     <div className="text-center">
-      <div className={`relative ${sizes[size]} mx-auto mb-4`}>
-        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-          <path
-            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-            fill="none"
-            stroke="rgba(255,255,255,0.2)"
-            strokeWidth="2"
+      <div className="relative w-32 h-32 mx-auto mb-4">
+        {/* Outer ring */}
+        <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 120 120">
+          <circle
+            cx="60"
+            cy="60"
+            r="50"
+            fill="transparent"
+            stroke="#e5e7eb"
+            strokeWidth="8"
           />
-          <path
-            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-            fill="none"
-            stroke={score < 0.3 ? '#10B981' : score < 0.6 ? '#F59E0B' : '#EF4444'}
-            strokeWidth="2"
-            strokeDasharray={`${percentage}, 100`}
-            className="transition-all duration-1000 ease-out"
+          <motion.circle
+            cx="60"
+            cy="60"
+            r="50"
+            fill="transparent"
+            stroke={color === 'green' ? '#10b981' : color === 'yellow' ? '#f59e0b' : '#ef4444'}
+            strokeWidth="8"
+            strokeDasharray={314}
+            initial={{ strokeDashoffset: 314 }}
+            animate={{ strokeDashoffset: 314 - (314 * safetyPercentage) / 100 }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            strokeLinecap="round"
           />
         </svg>
+        
+        {/* Center text */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className={`text-2xl font-bold ${getColor(score)}`}>
-            {percentage.toFixed(1)}%
-          </span>
+          <div className="text-center">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+              className={`text-2xl font-bold ${textColor}`}
+            >
+              {safetyPercentage}%
+            </motion.div>
+            <div className="text-xs text-gray-500 font-medium">SAFE</div>
+          </div>
         </div>
       </div>
-      <p className="text-white/70 text-sm">Toxicity Score</p>
+      
+      <div className={`inline-flex items-center px-4 py-2 rounded-full ${bgColor} text-white text-sm font-medium`}>
+        {safetyPercentage >= 80 ? '✓ Content appears safe' : 
+         safetyPercentage >= 50 ? '⚠ Potentially problematic' : 
+         '⚠ High toxicity detected'}
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default ToxicityMeter
+export default ToxicityMeter;
