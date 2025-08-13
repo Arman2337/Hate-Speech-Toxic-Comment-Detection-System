@@ -1,5 +1,5 @@
 const express = require("express");
-const { predictText, getHistory } = require("../controllers/predictController");
+const { predictText, getHistory } = require("../controller/predictController");
 
 const router = express.Router();
 
