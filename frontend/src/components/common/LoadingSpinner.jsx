@@ -1,18 +1,21 @@
-import React from 'react'
+import React from 'react';
 
-const LoadingSpinner = ({ size = 'md', className = '' }) => {
-  const sizeClasses = {
-    sm: 'w-4 h-4',
-    md: 'w-6 h-6',
-    lg: 'w-8 h-8',
-    xl: 'w-12 h-12'
-  }
+const LoadingSpinner = ({ className = 'w-8 h-8', color = 'blue' }) => {
+  const colorClasses = {
+    blue: 'border-blue-500',
+    white: 'border-white',
+    gray: 'border-gray-500',
+    purple: 'border-purple-500'
+  };
 
   return (
-    <div className={`inline-block ${sizeClasses[size]} ${className}`}>
-      <div className="animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
+    <div className={`
+      animate-spin rounded-full border-4 border-gray-200 ${colorClasses[color]}
+      ${className}
+    `} 
+    style={{ borderTopColor: 'currentColor' }}>
     </div>
-  )
-}
+  );
+};
 
-export default LoadingSpinner
+export default LoadingSpinner;
