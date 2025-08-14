@@ -1,98 +1,168 @@
-import React, { createContext, useState, useContext, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 
-const AuthContext = createContext()
+const AuthContext = createContext();
 
 export const useAuth = () => {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    throw new Error('useAuth must be used within an AuthProvider');
   }
-  return context
-}
+  return context;
+};
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Check for stored auth token on mount
-    const token = localStorage.getItem('authToken')
-    const userData = localStorage.getItem('userData')
+    // Check for existing session
+    const token = localStorage.getItem('authToken');
+    const userData = localStorage.getItem('userData');
     
     if (token && userData) {
-      setUser(JSON.parse(userData))
-      setIsAuthenticated(true)
+      try {
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
+      }
     }
     
-    setLoading(false)
-  }, [])
+    setIsLoading(false);
+  }, []);
 
   const login = async (email, password) => {
     try {
-      // Simulate API call
-      const userData = {
-        id: 1,
-        name: 'John Doe',
-        email: email,
-        avatar: null
+      setIsLoading(true);
+      
+      // For development, use mock authentication
+      if (process.env.NODE_ENV === 'development') {
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+        
+        const mockUser = {
+          id: '1',
+          name: 'John Doe',
+          email: email,
+          avatar: 'JD',
+          role: 'user',
+          apiKey: 'sk-1234567890abcdef',
+          joinedAt: new Date().toISOString(),
+          settings: {
+            notifications: true,
+            theme: 'light',
+            toxicityThreshold: 0.7
+          }
+        };
+
+        const mockToken = 'mock-jwt-token-' + Date.now();
+        
+        localStorage.setItem('authToken', mockToken);
+        localStorage.setItem('userData', JSON.stringify(mockUser));
+        
+        setUser(mockUser);
+        setIsAuthenticated(true);
+        
+        toast.success('Login successful!');
+        return mockUser;
       }
+
+      // Production API call would go here
+      // const response = await api.post('/auth/login', { email, password });
+      // const { user, token } = response.data;
+      // localStorage.setItem('authToken', token);
+      // localStorage.setItem('userData', JSON.stringify(user));
+      // setUser(user);
+      // setIsAuthenticated(true);
+      // return user;
       
-      localStorage.setItem('authToken', 'mock-token')
-      localStorage.setItem('userData', JSON.stringify(userData))
-      
-      setUser(userData)
-      setIsAuthenticated(true)
-      
-      return { success: true }
     } catch (error) {
-      return { success: false, error: error.message }
+      toast.error('Login failed. Please check your credentials.');
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
 
   const register = async (name, email, password) => {
     try {
-      // Simulate API call
-      const userData = {
-        id: 1,
-        name: name,
-        email: email,
-        avatar: null
+      setIsLoading(true);
+      
+      // For development, use mock registration
+      if (process.env.NODE_ENV === 'development') {
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        const mockUser = {
+          id: Date.now().toString(),
+          name,
+          email,
+          avatar: name.split(' ').map(n => n[0]).join(''),
+          role: 'user',
+          apiKey: 'sk-' + Math.random().toString(36).substr(2, 16),
+          joinedAt: new Date().toISOString(),
+          settings: {
+            notifications: true,
+            theme: 'light',
+            toxicityThreshold: 0.7
+          }
+        };
+
+        const mockToken = 'mock-jwt-token-' + Date.now();
+        
+        localStorage.setItem('authToken', mockToken);
+        localStorage.setItem('userData', JSON.stringify(mockUser));
+        
+        setUser(mockUser);
+        setIsAuthenticated(true);
+        
+        toast.success('Registration successful!');
+        return mockUser;
       }
+
+      // Production API call would go here
       
-      localStorage.setItem('authToken', 'mock-token')
-      localStorage.setItem('userData', JSON.stringify(userData))
-      
-      setUser(userData)
-      setIsAuthenticated(true)
-      
-      return { success: true }
     } catch (error) {
-      return { success: false, error: error.message }
+      toast.error('Registration failed. Please try again.');
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
 
   const logout = () => {
-    localStorage.removeItem('authToken')
-    localStorage.removeItem('userData')
-    setUser(null)
-    setIsAuthenticated(false)
-  }
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userData');
+    setUser(null);
+    setIsAuthenticated(false);
+    toast.success('Logged out successfully');
+  };
+
+  const updateUser = (updatedData) => {
+    const updatedUser = { ...user, ...updatedData };
+    setUser(updatedUser);
+    localStorage.setItem('userData', JSON.stringify(updatedUser));
+    toast.success('Profile updated successfully');
+  };
 
   const value = {
     user,
+    isLoading,
     isAuthenticated,
-    loading,
     login,
     register,
-    logout
-  }
+    logout,
+    updateUser
+  };
 
   return (
     <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
-  )
-}
+  );
+};
 
-export { AuthContext }
+export { AuthContext };
