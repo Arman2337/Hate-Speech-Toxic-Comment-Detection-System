@@ -92,7 +92,7 @@ const Login = () => {
             </Button>
 
             <div className="text-center">
-              <p className="text-white/70">
+              <p className="text-black/70">
                 Don't have an account?{' '}
                 <Link to="/register" className="text-blue-400 hover:text-blue-300 font-medium">
                   Sign up
