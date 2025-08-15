@@ -64,3 +64,26 @@ exports.getHistory = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch history." });
   }
 };
+
+
+exports.getStats = async (req, res) => {
+    try {
+        // 1. Get total number of documents in the Analysis collection
+        const totalAnalyzed = await Analysis.countDocuments();
+
+        // 2. Get the number of documents considered toxic
+        // We define "toxic" as any entry where the overallScore is >= 50
+        const toxicDetected = await Analysis.countDocuments({ 
+            'results.overallScore': { $gte: 50 } 
+        });
+
+        res.status(200).json({
+            totalAnalyzed,
+            toxicDetected
+        });
+
+    } catch (error) {
+        console.error("❌ Failed to fetch stats:", error);
+        res.status(500).json({ message: "Failed to fetch statistics." });
+    }
+};
