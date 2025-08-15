@@ -1,5 +1,7 @@
 const { spawn } = require("child_process");
 const path = require("path");
+const fs = require("fs");
+const csv = require("csv-parser");
 const Analysis = require("../model/analysis");
 
 exports.predictText = (req, res) => {
@@ -86,4 +88,34 @@ exports.getStats = async (req, res) => {
         console.error("❌ Failed to fetch stats:", error);
         res.status(500).json({ message: "Failed to fetch statistics." });
     }
+};
+
+
+exports.getExampleComment = (req, res) => {
+    const results = [];
+    const csvFilePath = path.join(__dirname, '..','ml' ,'data', 'train.csv');
+
+    if (!fs.existsSync(csvFilePath)) {
+        console.error('❌ train.csv not found at', csvFilePath || './ml/data/train.csv');
+        return res.status(500).json({ message: 'Example dataset not found on server.' });
+    }
+
+    fs.createReadStream(csvFilePath)
+        .pipe(csv())
+        .on('data', (data) => results.push(data))
+        .on('end', () => {
+            if (results.length === 0) {
+                return res.status(500).json({ message: 'No data in example dataset.' });
+            }
+            // Select a random row
+            const randomIndex = Math.floor(Math.random() * results.length);
+            const randomComment = results[randomIndex];
+            
+            // Send back only the comment text
+            res.status(200).json({ comment_text: randomComment.comment_text });
+        })
+        .on('error', (error) => {
+            console.error('❌ Error reading CSV file:', error);
+            res.status(500).json({ message: 'Failed to read example dataset.' });
+        });
 };
