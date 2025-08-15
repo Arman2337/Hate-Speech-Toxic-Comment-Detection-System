@@ -1,8 +1,9 @@
 // src/pages/Home.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ShieldCheckIcon, SparklesIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { ShieldCheckIcon, SparklesIcon, ClockIcon, ChartBarIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
+import { useAuth } from '../hooks/useAuth'; // Import useAuth
 
 // Components
 import Card from '../components/ui/Card';
@@ -11,7 +12,7 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import ToxicityMeter from '../components/charts/ToxicityMeter';
 
 // Services
-import { analyzeToxicity } from '../services/toxicityService';
+import api from '../services/api'; // Use the central api instance
 
 // Utils
 import { EXAMPLE_TEXTS } from '../utils/constants';
@@ -21,6 +22,27 @@ const Home = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState(null);
   const [analysisTime, setAnalysisTime] = useState(0);
+  const [stats, setStats] = useState({ total: 0, toxic: 0 }); // State for stats
+
+  const { user } = useAuth(); // Get the logged-in user
+
+  // --- NEW: Fetch stats from the backend when the component loads ---
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const { data } = await api.get('/predict/stats');
+        setStats({
+          total: data.totalAnalyzed,
+          toxic: data.toxicDetected
+        });
+      } catch (error) {
+        console.error("Failed to fetch stats:", error);
+        // Don't show a toast for this, just log the error
+      }
+    };
+    fetchStats();
+  }, []);
+
 
   const handleAnalyze = async () => {
     if (!text.trim()) {
@@ -32,16 +54,27 @@ const Home = () => {
     const startTime = Date.now();
 
     try {
-      // Simulate API call
-      const analysisResults = await analyzeToxicity(text);
+      // Pass the userId if the user is logged in
+      const payload = { text, userId: user ? user.id : null };
+      const { data: analysisResults } = await api.post('/predict', payload);
+      
       const endTime = Date.now();
       
       setResults(analysisResults);
-      setAnalysisTime((endTime - startTime) / 1000);
+      setAnalysisTime(((endTime - startTime) / 1000).toFixed(2));
       
       toast.success('Analysis completed successfully!');
+
+      // --- NEW: Refresh stats after a successful analysis ---
+      if (user) { // Only refresh if a user is logged in to see their contribution
+         setStats(prevStats => ({...prevStats, total: prevStats.total + 1}));
+         if(analysisResults.overallScore > 50) {
+            setStats(prevStats => ({...prevStats, toxic: prevStats.toxic + 1}));
+         }
+      }
+
     } catch (error) {
-      toast.error('Analysis failed. Please try again.');
+      toast.error(error?.response?.data?.message || 'Analysis failed. Please try again.');
       console.error('Analysis error:', error);
     } finally {
       setIsAnalyzing(false);
@@ -174,7 +207,6 @@ const Home = () => {
             </Button>
           </div>
 
-          {/* Loading State */}
           {isAnalyzing && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -187,7 +219,6 @@ const Home = () => {
             </motion.div>
           )}
 
-          {/* Results Section */}
           {results && !isAnalyzing && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -207,12 +238,11 @@ const Home = () => {
                 </div>
               </div>
 
-              {/* Toxicity Meter */}
               <div className="mb-6">
-                <ToxicityMeter score={results.overallScore} />
+                {/* --- FIX: Divide score by 100 for the meter component --- */}
+                <ToxicityMeter score={results.overallScore / 100} />
               </div>
 
-              {/* Analyzed Text Preview */}
               <div className="bg-white rounded-lg p-4 mb-6 border">
                 <h4 className="font-medium text-gray-700 mb-2">Analyzed Text:</h4>
                 <p className="text-gray-600 italic">
@@ -220,24 +250,24 @@ const Home = () => {
                 </p>
               </div>
 
-              {/* Category Breakdown */}
               <div>
                 <h4 className="font-medium text-gray-700 mb-4">Category Breakdown:</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {Object.entries(results.categories).map(([category, score]) => {
-                    const percentage = Math.round(score * 100);
-                    let colorClass = 'text-green-600 bg-green-100';
+                    // --- FIX: Do NOT multiply by 100 here ---
+                    const percentage = Math.round(score); 
                     
-                    if (percentage > 30) {
+                    let colorClass = 'text-green-600 bg-green-100';
+                    if (percentage > 75) {
                       colorClass = 'text-red-600 bg-red-100';
-                    } else if (percentage > 10) {
+                    } else if (percentage > 40) {
                       colorClass = 'text-yellow-600 bg-yellow-100';
                     }
 
                     return (
                       <div key={category} className="bg-white rounded-lg p-4 text-center shadow-sm">
                         <div className="font-medium text-gray-700 mb-2 capitalize">
-                          {category.replace(/([A-Z])/g, ' $1').trim()}
+                          {category.replace(/_/g, ' ')}
                         </div>
                         <div className={`text-2xl font-bold ${colorClass} rounded-full w-16 h-16 flex items-center justify-center mx-auto`}>
                           {percentage}%
@@ -252,35 +282,26 @@ const Home = () => {
         </Card>
       </motion.div>
 
-      {/* Quick Stats */}
+      {/* --- NEW: Quick Stats section with dynamic data --- */}
       <motion.div
         variants={itemVariants}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 md:grid-cols-4 gap-6"
+        className="grid grid-cols-1 md:grid-cols-2 gap-6"
       >
         <Card className="text-center p-6">
-          <div className="text-3xl font-bold text-blue-600 mb-2">2,847</div>
-          <div className="text-gray-600">Total Analyzed</div>
+          <ChartBarIcon className="w-8 h-8 mx-auto text-blue-500 mb-2" />
+          <div className="text-3xl font-bold text-blue-600 mb-2">{stats.total.toLocaleString()}</div>
+          <div className="text-gray-600">Total Analyses by All Users</div>
         </Card>
         
         <Card className="text-center p-6">
-          <div className="text-3xl font-bold text-red-600 mb-2">342</div>
-          <div className="text-gray-600">Toxic Detected</div>
-        </Card>
-        
-        <Card className="text-center p-6">
-          <div className="text-3xl font-bold text-green-600 mb-2">94.7%</div>
-          <div className="text-gray-600">Accuracy</div>
-        </Card>
-        
-        <Card className="text-center p-6">
-          <div className="text-3xl font-bold text-purple-600 mb-2">0.23s</div>
-          <div className="text-gray-600">Avg Response</div>
+          <ExclamationTriangleIcon className="w-8 h-8 mx-auto text-red-500 mb-2" />
+          <div className="text-3xl font-bold text-red-600 mb-2">{stats.toxic.toLocaleString()}</div>
+          <div className="text-gray-600">Toxic Texts Detected</div>
         </Card>
       </motion.div>
     </div>
   );
 };
-
 export default Home;
