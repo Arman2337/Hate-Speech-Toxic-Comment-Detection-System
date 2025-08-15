@@ -1,7 +1,7 @@
 // src/pages/Home.jsx
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ShieldCheckIcon, SparklesIcon, ClockIcon, ChartBarIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { ShieldCheckIcon, SparklesIcon, ClockIcon, ChartBarIcon, ExclamationTriangleIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth'; // Import useAuth
 
@@ -14,19 +14,16 @@ import ToxicityMeter from '../components/charts/ToxicityMeter';
 // Services
 import api from '../services/api'; // Use the central api instance
 
-// Utils
-import { EXAMPLE_TEXTS } from '../utils/constants';
-
 const Home = () => {
   const [text, setText] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState(null);
   const [analysisTime, setAnalysisTime] = useState(0);
-  const [stats, setStats] = useState({ total: 0, toxic: 0 }); // State for stats
+  const [stats, setStats] = useState({ total: 0, toxic: 0 });
+  const [isLoadingExample, setIsLoadingExample] = useState(false); // --- NEW: State for loading example
 
-  const { user } = useAuth(); // Get the logged-in user
+  const { user } = useAuth();
 
-  // --- NEW: Fetch stats from the backend when the component loads ---
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -37,7 +34,6 @@ const Home = () => {
         });
       } catch (error) {
         console.error("Failed to fetch stats:", error);
-        // Don't show a toast for this, just log the error
       }
     };
     fetchStats();
@@ -54,7 +50,6 @@ const Home = () => {
     const startTime = Date.now();
 
     try {
-      // Pass the userId if the user is logged in
       const payload = { text, userId: user ? user.id : null };
       const { data: analysisResults } = await api.post('/predict', payload);
       
@@ -65,12 +60,10 @@ const Home = () => {
       
       toast.success('Analysis completed successfully!');
 
-      // --- NEW: Refresh stats after a successful analysis ---
-      if (user) { // Only refresh if a user is logged in to see their contribution
-         setStats(prevStats => ({...prevStats, total: prevStats.total + 1}));
-         if(analysisResults.overallScore > 50) {
-            setStats(prevStats => ({...prevStats, toxic: prevStats.toxic + 1}));
-         }
+      if (user) {
+         // Fetch the latest stats from the server to ensure consistency
+         const { data } = await api.get('/predict/stats');
+         setStats({ total: data.totalAnalyzed, toxic: data.toxicDetected });
       }
 
     } catch (error) {
@@ -87,9 +80,19 @@ const Home = () => {
     setAnalysisTime(0);
   };
 
-  const loadExample = () => {
-    const randomExample = EXAMPLE_TEXTS[Math.floor(Math.random() * EXAMPLE_TEXTS.length)];
-    setText(randomExample);
+  // --- UPDATED: Load example from the backend ---
+  const loadExample = async () => {
+    setIsLoadingExample(true);
+    try {
+      const { data } = await api.get('/predict/example');
+      setText(data.comment_text);
+      setResults(null); // Clear previous results
+    } catch (error) {
+      toast.error('Could not load example. Please try again.');
+      console.error("Failed to load example:", error);
+    } finally {
+      setIsLoadingExample(false);
+    }
   };
 
   const containerVariants = {
@@ -193,7 +196,7 @@ const Home = () => {
             <Button
               onClick={handleClear}
               variant="secondary"
-              disabled={isAnalyzing}
+              disabled={isAnalyzing || isLoadingExample}
             >
               Clear
             </Button>
@@ -201,9 +204,14 @@ const Home = () => {
             <Button
               onClick={loadExample}
               variant="outline"
-              disabled={isAnalyzing}
+              disabled={isAnalyzing || isLoadingExample}
             >
-              Load Example
+               {isLoadingExample ? (
+                <LoadingSpinner className="w-4 h-4 mr-2" />
+              ) : (
+                <ArrowPathIcon className="w-4 h-4 mr-2" />
+              )}
+              {isLoadingExample ? 'Loading...' : 'Load Example'}
             </Button>
           </div>
 
@@ -239,7 +247,6 @@ const Home = () => {
               </div>
 
               <div className="mb-6">
-                {/* --- FIX: Divide score by 100 for the meter component --- */}
                 <ToxicityMeter score={results.overallScore / 100} />
               </div>
 
@@ -254,7 +261,6 @@ const Home = () => {
                 <h4 className="font-medium text-gray-700 mb-4">Category Breakdown:</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {Object.entries(results.categories).map(([category, score]) => {
-                    // --- FIX: Do NOT multiply by 100 here ---
                     const percentage = Math.round(score); 
                     
                     let colorClass = 'text-green-600 bg-green-100';
@@ -282,7 +288,6 @@ const Home = () => {
         </Card>
       </motion.div>
 
-      {/* --- NEW: Quick Stats section with dynamic data --- */}
       <motion.div
         variants={itemVariants}
         initial="hidden"
@@ -304,4 +309,5 @@ const Home = () => {
     </div>
   );
 };
+
 export default Home;
