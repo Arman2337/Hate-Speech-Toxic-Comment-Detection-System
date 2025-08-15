@@ -4,7 +4,7 @@ const { predictText, getHistory ,getStats ,getExampleComment} = require("../cont
 const router = express.Router();
 
 router.post("/", predictText);
-router.get("/history/:userId", getHistory);
+router.get("/history", getHistory);
 router.get("/stats", getStats);
 router.get("/example", getExampleComment);
 
