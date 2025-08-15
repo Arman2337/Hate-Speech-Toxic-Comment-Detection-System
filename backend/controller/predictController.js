@@ -2,7 +2,9 @@ const { spawn } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 const csv = require("csv-parser");
+const jwt = require("jsonwebtoken");
 const Analysis = require("../model/analysis");
+const JWT_SECRET = process.env.JWT_SECRET;
 
 exports.predictText = (req, res) => {
   const { text, userId } = req.body;
@@ -59,11 +61,28 @@ exports.predictText = (req, res) => {
 
 exports.getHistory = async (req, res) => {
   try {
-    const { userId } = req.params;
+    // 1. Get the token from the cookie
+    const token = req.cookies?.token;
+    if (!token) {
+        return res.status(401).json({ message: "Not authenticated, please log in." });
+    }
+
+    // 2. Verify the token and get the user's ID
+   let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+    } catch (err) {
+      return res.status(401).json({ message: "Your session is invalid. Please log in again." });
+    }
+
+    const userId = decoded.id;
+    // 3. Fetch history for that specific user ID
     const history = await Analysis.find({ userId }).sort({ createdAt: -1 });
-    res.status(200).json(history);
+    return res.status(200).json(history);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch history." });
+    console.error("Failed to fetch history:", error);
+    // This will catch invalid/expired tokens
+    res.status(401).json({ message: "Your session is invalid. Please log in again." });
   }
 };
 
