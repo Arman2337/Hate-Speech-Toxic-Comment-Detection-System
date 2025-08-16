@@ -7,7 +7,7 @@ const Analysis = require("../model/analysis");
 const JWT_SECRET = process.env.JWT_SECRET;
 
 exports.predictText = (req, res) => {
-  const { text, userId } = req.body;
+  const { text } = req.body;
 
   if (!text) {
     return res.status(400).json({ error: "Text input is required." });
@@ -40,15 +40,28 @@ exports.predictText = (req, res) => {
 
     try {
       const result = JSON.parse(resultData);
-
+      const token = req.cookies.token;
       // ✅ Save to history if user is logged in
-      if (userId) {
-        const newAnalysis = new Analysis({
-          userId,
-          inputText: text,
-          results: result,
-        });
-        await newAnalysis.save();
+      if (token) {
+        try {
+          const decoded = jwt.verify(token, JWT_SECRET);
+          const userId = decoded.id;
+          
+          console.log(`✅ User is logged in. Saving analysis for userId: ${userId}`);
+          const newAnalysis = new Analysis({
+            userId,
+            inputText: text,
+            results: result,
+          });
+          await newAnalysis.save();
+
+        } catch (err) {
+          // This can happen if the token is invalid or expired.
+          // We don't want to block the analysis, so we just log it.
+          console.log("⚠️ Could not verify token to save history. Continuing without saving.");
+        }
+      } else {
+        console.log("ℹ️ User is not logged in. Analysis will not be saved to history.");
       }
 
       res.json(result);
