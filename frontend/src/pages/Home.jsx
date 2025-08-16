@@ -21,7 +21,7 @@ const Home = () => {
   const [analysisTime, setAnalysisTime] = useState(0);
   const [stats, setStats] = useState({ total: 0, toxic: 0 });
   const [isLoadingExample, setIsLoadingExample] = useState(false); // --- NEW: State for loading example
-
+  const { isAuthenticated } = useAuth();
   const { user } = useAuth();
 
   useEffect(() => {
@@ -50,7 +50,8 @@ const Home = () => {
     const startTime = Date.now();
 
     try {
-      const payload = { text, userId: user ? user.id : null };
+      // --- FIX: We no longer send the userId. The backend gets it from the cookie. ---
+      const payload = { text };
       const { data: analysisResults } = await api.post('/predict', payload);
       
       const endTime = Date.now();
@@ -60,10 +61,10 @@ const Home = () => {
       
       toast.success('Analysis completed successfully!');
 
-      if (user) {
-         // Fetch the latest stats from the server to ensure consistency
-         const { data } = await api.get('/predict/stats');
-         setStats({ total: data.totalAnalyzed, toxic: data.toxicDetected });
+      // If a user is logged in, their analysis was saved, so we should refresh the stats.
+      if (isAuthenticated) {
+       const { data } = await api.get('/predict/stats');
+       setStats({ total: data.totalAnalyzed, toxic: data.toxicDetected });
       }
 
     } catch (error) {
