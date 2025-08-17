@@ -89,49 +89,116 @@
 
 // export { AuthContext };
 
-const login = async (email, password) => {
-  setIsLoading(true);
-  try {
-    await api.post(
-      '/auth/login',
-      { email, password },
-      { withCredentials: true } // ✅ important for cookies
-    );
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
+import api from '../services/api';
 
-    // Fetch user profile
-    const { data } = await api.get('/auth/me', { withCredentials: true });
-    setUser(data.user);
-    setIsAuthenticated(true);
-    toast.success('Login successful!');
-    return { success: true };
-  } catch (err) {
-    toast.error(err?.response?.data?.error || 'Login failed'); // ✅ backend uses "error", not "message"
-    return { success: false };
-  } finally {
-    setIsLoading(false);
-  }
+const AuthContext = createContext();
+
+export const useAuth = () => useContext(AuthContext);
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Check auth state on mount
+  useEffect(() => {
+    let isMounted = true;
+
+    const checkAuth = async () => {
+      try {
+        const { data } = await api.get('/auth/me', { withCredentials: true });
+        if (isMounted) {
+          setUser(data.user);
+          setIsAuthenticated(true);
+        }
+      } catch {
+        if (isMounted) {
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    checkAuth();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Login
+  const login = async (email, password) => {
+    setIsLoading(true);
+    try {
+      await api.post(
+        '/auth/login',
+        { email, password },
+        { withCredentials: true } // ✅ include cookies
+      );
+
+      const { data } = await api.get('/auth/me', { withCredentials: true });
+      setUser(data.user);
+      setIsAuthenticated(true);
+      toast.success('Login successful!');
+      return { success: true };
+    } catch (err) {
+      const message =
+        err?.response?.data?.error || 'Login failed. Please try again.';
+      toast.error(message);
+      return { success: false, error: message };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Register
+  const register = async (username, email, password) => {
+    try {
+      await api.post(
+        '/auth/register',
+        { username, email, password },
+        { withCredentials: true } // ✅ include cookies
+      );
+
+      const { data } = await api.get('/auth/me', { withCredentials: true });
+      setUser(data.user);
+      setIsAuthenticated(true);
+      toast.success('Registration successful!');
+      return { success: true };
+    } catch (err) {
+      const message =
+        err?.response?.data?.error ||
+        'Registration failed. Please try again.';
+      toast.error(message);
+      return { success: false, error: message };
+    }
+  };
+
+  // Logout
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout', {}, { withCredentials: true });
+      setUser(null);
+      setIsAuthenticated(false);
+      toast.success('Logged out successfully');
+    } catch {
+      toast.error('Logout failed');
+    }
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{ user, isLoading, isAuthenticated, login, register, logout }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
-const register = async (username, email, password) => {
-  try {
-    // Create the user and set cookie
-    await api.post(
-      '/auth/register',
-      { username, email, password },
-      { withCredentials: true } // ✅ important for cookies
-    );
+export { AuthContext };
 
-    // Fetch the new user
-    const { data } = await api.get('/auth/me', { withCredentials: true });
-    setUser(data.user);
-    setIsAuthenticated(true);
-    toast.success('Registration successful!');
-    return { success: true };
-  } catch (err) {
-    const message =
-      err?.response?.data?.error || // ✅ backend sends "error"
-      'Registration failed. Please try again.';
-    toast.error(message);
-    return { success: false, error: message };
-  }
-};
