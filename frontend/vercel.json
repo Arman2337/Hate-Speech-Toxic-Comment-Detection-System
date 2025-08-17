@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "vite.config.js",
+      "src": "package.json",
       "use": "@vercel/static-build",
       "config": { "distDir": "dist" }
     }
@@ -10,7 +10,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "https://hate-speech-toxic-comment-detection-backend.vercel.app/api/$1"
+      "dest": "https://your-backend-project.vercel.app/api/$1"
     },
     {
       "src": "/(.*)",
