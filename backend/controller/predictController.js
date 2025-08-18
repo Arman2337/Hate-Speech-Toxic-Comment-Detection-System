@@ -5,6 +5,39 @@ const csv = require("csv-parser");
 const jwt = require("jsonwebtoken");
 const Analysis = require("../model/analysis");
 const JWT_SECRET = process.env.JWT_SECRET;
+const User = require("../model/user");
+
+exports.getDashboardStats = async (req, res) => {
+    try {
+        const totalAnalyzed = await Analysis.countDocuments();
+        const toxicDetected = await Analysis.countDocuments({ 'results.overallScore': { $gte: 50 } });
+        const activeUsers = await User.countDocuments();
+        
+        // Get the 5 most recent analyses
+        const recentActivity = await Analysis.find()
+            .sort({ createdAt: -1 })
+            .limit(5)
+            .populate('userId', 'username'); // Optional: gets username if available
+
+        // Get analyses from the start of today
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+        const todayAnalyzed = await Analysis.countDocuments({ createdAt: { $gte: startOfToday } });
+
+        res.status(200).json({
+            totalAnalyzed,
+            toxicDetected,
+            activeUsers,
+            recentActivity,
+            todayAnalyzed
+        });
+
+    } catch (error) {
+        console.error("❌ Failed to fetch dashboard stats:", error);
+        res.status(500).json({ message: "Failed to fetch dashboard statistics." });
+    }
+};
+
 
 exports.predictText = (req, res) => {
   const { text } = req.body;
