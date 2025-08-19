@@ -12,24 +12,50 @@ exports.getDashboardStats = async (req, res) => {
         const totalAnalyzed = await Analysis.countDocuments();
         const toxicDetected = await Analysis.countDocuments({ 'results.overallScore': { $gte: 50 } });
         const activeUsers = await User.countDocuments();
-        
-        // Get the 5 most recent analyses
-        const recentActivity = await Analysis.find()
-            .sort({ createdAt: -1 })
-            .limit(5)
-            .populate('userId', 'username'); // Optional: gets username if available
-
+      
         // Get analyses from the start of today
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
         const todayAnalyzed = await Analysis.countDocuments({ createdAt: { $gte: startOfToday } });
 
+        // 1. Analysis Volume for the last 7 days
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        sevenDaysAgo.setHours(0, 0, 0, 0);
+
+        const dailyAnalyses = await Analysis.aggregate([
+            { $match: { createdAt: { $exists: true, $gte: sevenDaysAgo } } },
+            {
+                $group: {
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+        
+        // 2. Toxicity Category Breakdown (sum of all scores)
+        const categoryBreakdown = await Analysis.aggregate([
+            {
+                $group: {
+                    _id: null,
+                    toxic: { $sum: "$results.categories.toxic" },
+                    severe_toxic: { $sum: "$results.categories.severe_toxic" },
+                    obscene: { $sum: "$results.categories.obscene" },
+                    threat: { $sum: "$results.categories.threat" },
+                    insult: { $sum: "$results.categories.insult" },
+                    identity_hate: { $sum: "$results.categories.identity_hate" },
+                }
+            }
+        ]);
+
         res.status(200).json({
             totalAnalyzed,
             toxicDetected,
             activeUsers,
-            recentActivity,
-            todayAnalyzed
+            todayAnalyzed,
+            dailyAnalyses: dailyAnalyses, // Add to response
+            categoryBreakdown: categoryBreakdown[0] || {} // Add to response
         });
 
     } catch (error) {
