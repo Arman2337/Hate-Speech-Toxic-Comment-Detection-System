@@ -48,11 +48,6 @@ const Footer = () => {
                   History
                 </Link>
               </li>
-              {/* <li>
-                <Link to="/api" className="text-white/70 hover:text-white transition-colors">
-                  API Docs
-                </Link>
-              </li> */}
             </ul>
           </div>
 
