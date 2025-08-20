@@ -8,9 +8,11 @@ import {
   CheckCircleIcon,
   ClockIcon,
   UsersIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  BeakerIcon
 } from '@heroicons/react/24/outline';
 import api from '../services/api';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 // Components
 import Card from '../components/ui/Card';
@@ -61,6 +63,20 @@ const Dashboard = () => {
       </div>
     );
   }
+
+    // Prepare data for charts
+  const volumeData = stats.dailyAnalyses.map(item => ({
+    date: new Date(item._id).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+    Analyses: item.count,
+  }));
+
+    const categoryData = Object.entries(stats.categoryBreakdown)
+    .filter(([key]) => key !== '_id')
+    .map(([name, value]) => ({
+      name: name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+      Prevalence: Math.round(value),
+    }))
+    .sort((a, b) => b.Prevalence - a.Prevalence);
 
   // Calculate derived stats
   const cleanContent = stats.totalAnalyzed - stats.toxicDetected;
@@ -170,48 +186,48 @@ const Dashboard = () => {
         })}
       </motion.div>
 
-      {/* Recent Activity */}
-      <motion.div
-        variants={itemVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        <Card className="p-6">
-          <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-            <ClockIcon className="w-6 h-6 mr-2 text-purple-500" />
-            Recent Activity
-          </h3>
-          
-          <div className="space-y-4">
-            {stats.recentActivity.length > 0 ? stats.recentActivity.map((activity) => {
-                const level = getToxicityLevel(activity.results.overallScore);
-                let severityClass = 'bg-blue-500';
-                if (level === 'high') severityClass = 'bg-red-500';
-                else if (level === 'medium') severityClass = 'bg-yellow-500';
-                else if (level === 'low') severityClass = 'bg-green-500';
+      {/* Charts Section */}
+       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+         <motion.div variants={itemVariants} initial="hidden" animate="visible">
+           <Card className="p-6">
+             <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center"><ChartBarIcon className="w-6 h-6 mr-2 text-blue-500" />Analysis Volume (Last 7 Days)</h3>
+             <div className="h-80">
+               <ResponsiveContainer width="100%" height="100%">
+                 <LineChart data={volumeData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                   <CartesianGrid strokeDasharray="3 3" />
+                   <XAxis dataKey="date" />
+                   <YAxis />
+                   <Tooltip />
+                   <Legend />
+                   <Line type="monotone" dataKey="Analyses" stroke="#3b82f6" strokeWidth={2} activeDot={{ r: 8 }} />
+                 </LineChart>
+               </ResponsiveContainer>
+             </div>
+           </Card>
+         </motion.div>
 
-                return (
-                    <div key={activity._id} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
-                        <div className={`w-2 h-2 rounded-full ${severityClass}`}></div>
-                        <div className="flex-1">
-                        <p className="text-gray-900 font-medium">
-                            "{truncateText(activity.inputText, 60)}"
-                        </p>
-                        <p className="text-xs text-gray-500">
-                            Analyzed by {activity.userId ? activity.userId.username : 'Anonymous'}
-                        </p>
-                        </div>
-                        <div className="text-sm text-gray-500">{formatTimestamp(activity.createdAt)}</div>
-                    </div>
-                )
-            }) : (
-                <p className="text-gray-500 text-center py-4">No recent activity to display.</p>
-            )}
-          </div>
-        </Card>
-      </motion.div>
+         <motion.div variants={itemVariants} initial="hidden" animate="visible">
+           <Card className="p-6">
+             <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center"><BeakerIcon className="w-6 h-6 mr-2 text-red-500" />Toxicity Category Breakdown</h3>
+             <div className="h-80">
+               <ResponsiveContainer width="100%" height="100%">
+                 <BarChart data={categoryData} layout="vertical" margin={{ top: 5, right: 20, left: 30, bottom: 5 }}>
+                     <CartesianGrid strokeDasharray="3 3" />
+                     <XAxis type="number" />
+                     <YAxis dataKey="name" type="category" width={100} />
+                     <Tooltip />
+                     <Legend />
+                     <Bar dataKey="Prevalence" fill="#ef4444" />
+                 </BarChart>
+               </ResponsiveContainer>
+             </div>
+           </Card>
+         </motion.div>
+       </div>
     </div>
   );
 };
 
 export default Dashboard;
+
+
