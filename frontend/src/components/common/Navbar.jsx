@@ -177,7 +177,7 @@ const Navbar = () => {
                   <div className="flex items-center space-x-3 px-3 py-3 border-b border-gray-200">
                     <div className="w-10 h-10 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center">
                       <span className="text-white font-bold">
-                        {username?.name?.[0]?.toUpperCase() || 'U'}
+                        {user?.name?.[0]?.toUpperCase() || 'U'}
                       </span>
                     </div>
                     <div>
