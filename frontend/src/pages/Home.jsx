@@ -9,6 +9,7 @@ import { useAuth } from '../hooks/useAuth'; // Import useAuth
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/common/LoadingSpinner';
+import DotWaveLoader from '../components/common/DotWaveLoader';
 import ToxicityMeter from '../components/charts/ToxicityMeter';
 
 // Services
@@ -217,14 +218,8 @@ const Home = () => {
           </div>
 
           {isAnalyzing && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-8"
-            >
-              <LoadingSpinner className="w-12 h-12 mx-auto mb-4" />
-              <p className="text-gray-600">Analyzing text with AI model...</p>
-              <p className="text-sm text-gray-500 mt-2">This may take a few seconds</p>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <DotWaveLoader className="rounded-lg mb-2" />
             </motion.div>
           )}
 
