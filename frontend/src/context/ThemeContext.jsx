@@ -2,50 +2,67 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const ThemeContext = createContext();
 
-export const useTheme = () => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+export const useTheme = () => useContext(ThemeContext);
+
+export const themes = {
+  'dark-particles': {
+    name: 'Dark Particles',
+    description: 'Dark background with floating particles'
+  },
+  'glassmorphism': {
+    name: 'Glassmorphism', 
+    description: 'Frosted glass effect with blur'
+  },
+  'mesh-gradient': {
+    name: 'Mesh Gradient',
+    description: 'Shifting multi-colored gradients'
+  },
+  'cyberpunk-grid': {
+    name: 'Cyberpunk Grid',
+    description: 'Neon grid with scan lines'
+  },
+  'dynamic-gradient': {
+    name: 'Dynamic Gradient',
+    description: 'Rotating corner gradients'
+  },
+  'neural-network': {
+    name: 'Neural Network',
+    description: 'Animated neural network nodes'
   }
-  return context;
 };
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState('light');
+  const [currentTheme, setCurrentTheme] = useState('dark-particles');
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
 
   useEffect(() => {
-    // Check for saved theme preference
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      setTheme(savedTheme);
-    } else {
-      // Check system preference
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      setTheme(systemTheme);
+    const savedTheme = localStorage.getItem('selectedTheme');
+    if (savedTheme && themes[savedTheme]) {
+      setCurrentTheme(savedTheme);
     }
   }, []);
 
-  useEffect(() => {
-    // Update document class and localStorage
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  };
-
-  const value = {
-    theme,
-    setTheme,
-    toggleTheme
+  const changeTheme = (themeKey) => {
+    if (themes[themeKey]) {
+      setCurrentTheme(themeKey);
+      localStorage.setItem('selectedTheme', themeKey);
+      setIsThemeMenuOpen(false);
+    }
   };
 
   return (
-    <ThemeContext.Provider value={value}>
+    <ThemeContext.Provider value={{
+      currentTheme,
+      changeTheme,
+      isThemeMenuOpen,
+      setIsThemeMenuOpen,
+      themes
+    }}>
       {children}
     </ThemeContext.Provider>
   );
 };
+
+export { ThemeContext };
 
 
