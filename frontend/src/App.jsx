@@ -10,6 +10,7 @@ import { ThemeProvider } from './context/ThemeContext';
 // Components
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
+import AnimatedBackground from './components/common/AnimatedBackground';
 
 // Pages
 import Home from './pages/Home';
@@ -42,10 +43,11 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <Router>
-          <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-purple-700">
+          <div className="min-h-screen relative">
+            <AnimatedBackground />
             <Navbar />
 
-            <main className="pt-20 min-h-screen">
+            <main className="pt-20 min-h-screen relative z-10">
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route
