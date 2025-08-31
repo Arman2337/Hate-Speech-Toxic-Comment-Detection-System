@@ -9,8 +9,8 @@ import { useAuth } from '../hooks/useAuth'; // Import useAuth
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/common/LoadingSpinner';
-import DotWaveLoader from '../components/common/DotWaveLoader';
 import ToxicityMeter from '../components/charts/ToxicityMeter';
+import DotWaveLoader from '../components/common/DotWaveLoader';
 
 // Services
 import api from '../services/api'; // Use the central api instance
@@ -153,27 +153,27 @@ const Home = () => {
         animate="visible"
         className="mb-8"
       >
-        <Card className="p-8">
+        <div className="glass-card p-8 rounded-2xl">
           <div className="mb-6">
-            <label className="block text-lg font-semibold text-gray-700 mb-4">
-              <SparklesIcon className="w-6 h-6 inline-block mr-2 text-blue-500" />
+            <label className="block text-lg font-semibold text-white mb-4">
+              <SparklesIcon className="w-6 h-6 inline-block mr-2 text-blue-400" />
               Enter text to analyze for toxicity
             </label>
             
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
-              className="w-full h-40 p-4 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300 resize-none text-gray-700 placeholder-gray-400"
+              className="w-full h-40 p-4 border-2 border-white/20 rounded-lg focus:border-blue-400 focus:ring-4 focus:ring-blue-400/20 transition-all duration-300 resize-none text-white placeholder-white/60 bg-white/10 backdrop-blur-sm"
               placeholder="Type or paste your text here to check for toxic content..."
               disabled={isAnalyzing}
             />
             
             <div className="flex justify-between items-center mt-2">
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-white/70">
                 {text.length} characters
               </span>
               {text.length > 500 && (
-                <span className="text-sm text-orange-500">
+                <span className="text-sm text-orange-400">
                   Long texts may take more time to analyze
                 </span>
               )}
@@ -228,15 +228,15 @@ const Home = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 border-l-4 border-blue-500"
+              className="glass-card rounded-lg p-6 border border-white/20"
             >
               <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-                <h3 className="text-xl font-semibold text-gray-800 flex items-center">
-                  <ShieldCheckIcon className="w-6 h-6 mr-2 text-blue-500" />
+                <h3 className="text-xl font-semibold text-white flex items-center">
+                  <ShieldCheckIcon className="w-6 h-6 mr-2 text-blue-400" />
                   Analysis Results
                 </h3>
                 
-                <div className="flex items-center text-sm text-gray-600">
+                <div className="flex items-center text-sm text-white/70">
                   <ClockIcon className="w-4 h-4 mr-1" />
                   {analysisTime}s processing time
                 </div>
@@ -246,42 +246,47 @@ const Home = () => {
                 <ToxicityMeter score={results.overallScore / 100} />
               </div>
 
-              <div className="bg-white rounded-lg p-4 mb-6 border">
-                <h4 className="font-medium text-gray-700 mb-2">Analyzed Text:</h4>
-                <p className="text-gray-600 italic">
+              <div className="glass-card p-4 mb-6 border border-white/20">
+                <h4 className="font-medium text-white mb-2">Analyzed Text:</h4>
+                <p className="text-white/80 italic">
                   "{text.length > 200 ? `${text.substring(0, 200)}...` : text}"
                 </p>
               </div>
 
               <div>
-                <h4 className="font-medium text-gray-700 mb-4">Category Breakdown:</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Object.entries(results.categories).map(([category, score]) => {
-                    const percentage = Math.round(score); 
-                    
-                    let colorClass = 'text-green-600 bg-green-100';
-                    if (percentage > 75) {
-                      colorClass = 'text-red-600 bg-red-100';
-                    } else if (percentage > 40) {
-                      colorClass = 'text-yellow-600 bg-yellow-100';
-                    }
+  <h4 className="font-medium text-white mb-4">Category Breakdown:</h4>
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {Object.entries(results.categories).map(([category, score]) => {
+      const percentage = Math.round(score);
+      
+      // We only change the BACKGROUND color of the circle now
+      let colorClass = 'bg-green-500'; // Using solid colors for the circle now
+      if (percentage > 75) {
+        colorClass = 'bg-red-500';
+      } else if (percentage > 40) {
+        colorClass = 'bg-yellow-500';
+      }
 
-                    return (
-                      <div key={category} className="bg-white rounded-lg p-4 text-center shadow-sm">
-                        <div className="font-medium text-gray-700 mb-2 capitalize">
-                          {category.replace(/_/g, ' ')}
-                        </div>
-                        <div className={`text-2xl font-bold ${colorClass} rounded-full w-16 h-16 flex items-center justify-center mx-auto`}>
-                          {percentage}%
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+      return (
+        // CHANGED: Added bg-black/40, backdrop-blur-sm, and shadow-lg for better separation
+        <div key={category} className="bg-black/40 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20 shadow-lg">
+          <div className="font-medium text-gray-200 mb-3 capitalize"> {/* Use a slightly dimmer white for less important text */}
+            {category.replace(/_/g, ' ')}
+          </div>
+          {/* CHANGED: The text is now always text-white for high contrast. 
+            The background is a solid color for better visibility.
+          */}
+          <div className={`text-2xl font-bold text-white ${colorClass} rounded-full w-20 h-20 flex items-center justify-center mx-auto`}>
+            {percentage}%
+          </div>
+        </div>
+      );
+    })}
+  </div>
+</div>
             </motion.div>
           )}
-        </Card>
+        </div>
       </motion.div>
 
       <motion.div
@@ -290,17 +295,17 @@ const Home = () => {
         animate="visible"
         className="grid grid-cols-1 md:grid-cols-2 gap-6"
       >
-        <Card className="text-center p-6">
-          <ChartBarIcon className="w-8 h-8 mx-auto text-blue-500 mb-2" />
-          <div className="text-3xl font-bold text-blue-600 mb-2">{stats.total.toLocaleString()}</div>
-          <div className="text-gray-600">Total Analyses by All Users</div>
-        </Card>
+        <div className="glass-card text-center p-6 border border-white/20">
+          <ChartBarIcon className="w-8 h-8 mx-auto text-blue-400 mb-2" />
+          <div className="text-3xl font-bold text-blue-400 mb-2">{stats.total.toLocaleString()}</div>
+          <div className="text-white/70">Total Analyses by All Users</div>
+        </div>
         
-        <Card className="text-center p-6">
-          <ExclamationTriangleIcon className="w-8 h-8 mx-auto text-red-500 mb-2" />
-          <div className="text-3xl font-bold text-red-600 mb-2">{stats.toxic.toLocaleString()}</div>
-          <div className="text-gray-600">Toxic Texts Detected</div>
-        </Card>
+        <div className="glass-card text-center p-6 border border-white/20">
+          <ExclamationTriangleIcon className="w-8 h-8 mx-auto text-red-400 mb-2" />
+          <div className="text-3xl font-bold text-red-400 mb-2">{stats.toxic.toLocaleString()}</div>
+          <div className="text-white/70">Toxic Texts Detected</div>
+        </div>
       </motion.div>
     </div>
   );
