@@ -23,7 +23,8 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173", 
-      "https://hate-speech-toxic-comment-detection-six.vercel.app"
+      "https://hate-speech-toxic-comment-detection-six.vercel.app",
+      "chrome-extension://ocfackpelcbjodknalbeeepjhdmaibif"
     ],
     credentials: true,
   })
