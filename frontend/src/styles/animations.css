@@ -261,21 +261,6 @@
   animation: dotwave-shift 3s linear infinite;
 }
 
-/* sweeping highlight like napkin.ai */
-.dotwave-sweep {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.06) 50%, rgba(255,255,255,0) 100%);
-  transform: translateX(-100%);
-  animation: sweep 2.8s ease-in-out infinite;
-  pointer-events: none;
-}
-
-@keyframes sweep {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
 /* center pulse mark */
 .dotwave-pulse {
   border-radius: 9999px;
@@ -316,6 +301,21 @@
   50% { transform: scale(1.04); opacity: 1; }
 }
 
+/* sweeping highlight like napkin.ai */
+.dotwave-sweep {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.06) 50%, rgba(255,255,255,0) 100%);
+  transform: translateX(-100%);
+  animation: sweep 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
 /* randomized moving particles over the grid */
 .dotwave-particles {
   position: absolute;
@@ -336,4 +336,274 @@
 @keyframes particle-move {
   from { transform: translate(0, 0) scale(1); opacity: .85; }
   to   { transform: translate(var(--dx), var(--dy)) scale(1.3); opacity: .6; }
+}
+
+/* ===== THEME BACKGROUNDS ===== */
+
+/* Dark Particles Theme */
+.particles-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #60a5fa;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #60a5fa;
+  animation: particle-float 4s ease-in-out infinite;
+}
+
+@keyframes particle-float {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-20px) translateX(10px);
+    opacity: 1;
+  }
+}
+
+/* Glassmorphism Theme */
+@keyframes gradient-shift {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-10px, -10px) scale(1.1);
+  }
+}
+
+@keyframes gradient-shift-reverse {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(10px, 10px) scale(1.1);
+  }
+}
+
+.animate-gradient-shift {
+  animation: gradient-shift 8s ease-in-out infinite;
+}
+
+.animate-gradient-shift-reverse {
+  animation: gradient-shift-reverse 8s ease-in-out infinite reverse;
+}
+
+/* Mesh Gradient Theme */
+@keyframes mesh-shift {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(-20px, -20px) scale(1.2);
+  }
+  66% {
+    transform: translate(20px, 20px) scale(0.8);
+  }
+}
+
+@keyframes mesh-shift-delayed {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(20px, -20px) scale(1.2);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.8);
+  }
+}
+
+@keyframes mesh-shift-reverse {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(-20px, 20px) scale(1.2);
+  }
+  66% {
+    transform: translate(20px, -20px) scale(0.8);
+  }
+}
+
+.animate-mesh-shift {
+  animation: mesh-shift 12s ease-in-out infinite;
+}
+
+.animate-mesh-shift-delayed {
+  animation: mesh-shift-delayed 12s ease-in-out infinite;
+  animation-delay: 4s;
+}
+
+.animate-mesh-shift-reverse {
+  animation: mesh-shift-reverse 12s ease-in-out infinite;
+  animation-delay: 8s;
+}
+
+/* Cyberpunk Grid Theme */
+.cyberpunk-grid {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: grid-pulse 3s ease-in-out infinite;
+}
+
+@keyframes grid-pulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+.scan-lines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 255, 255, 0.03) 2px,
+    rgba(0, 255, 255, 0.03) 4px
+  );
+  animation: scan-move 10s linear infinite;
+}
+
+@keyframes scan-move {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+.cyberpunk-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(0, 255, 255, 0.1) 0%, transparent 70%);
+  animation: glow-pulse 4s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}
+
+/* Dynamic Gradient Theme */
+@keyframes dynamic-rotate {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  100% {
+    transform: rotate(360deg) scale(1.2);
+  }
+}
+
+@keyframes dynamic-rotate-reverse {
+  0% {
+    transform: rotate(0deg) scale(1.2);
+  }
+  100% {
+    transform: rotate(-360deg) scale(1);
+  }
+}
+
+@keyframes dynamic-rotate-fast {
+  0% {
+    transform: rotate(0deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(180deg) scale(1);
+  }
+}
+
+.animate-dynamic-rotate {
+  animation: dynamic-rotate 6s linear infinite;
+}
+
+.animate-dynamic-rotate-reverse {
+  animation: dynamic-rotate-reverse 6s linear infinite;
+}
+
+.animate-dynamic-rotate-fast {
+  animation: dynamic-rotate-fast 4s linear infinite;
+}
+
+/* Neural Network Theme */
+.neural-network {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.neural-node {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #60a5fa;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #60a5fa;
+  animation: node-pulse 3s ease-in-out infinite;
+}
+
+@keyframes node-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 1;
+  }
+}
+
+.neural-connection {
+  position: absolute;
+  width: 100px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #60a5fa, transparent);
+  transform-origin: left center;
+  animation: connection-flow 4s ease-in-out infinite;
+}
+
+@keyframes connection-flow {
+  0% {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+}
+
+/* Glassmorphism card effects */
+.glass-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
