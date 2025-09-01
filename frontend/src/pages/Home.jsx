@@ -11,7 +11,8 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import ToxicityMeter from '../components/charts/ToxicityMeter';
-import DotWaveLoader from '../components/common/DotWaveLoader';
+import AIAnalysisLoader from '../components/common/AIAnalysisLoader';
+import AnalysisComplete from '../components/common/AnalysisComplete';
 
 // Services
 import api from '../services/api'; // Use the central api instance
@@ -288,7 +289,7 @@ const Home = () => {
 
           {isAnalyzing && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <DotWaveLoader className="rounded-lg mb-2" />
+              <AIAnalysisLoader />
             </motion.div>
           )}
 
@@ -297,55 +298,68 @@ const Home = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="glass-card rounded-lg p-6 border border-white/20"
+              className="space-y-6"
             >
-              <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-                <h3 className="text-xl font-semibold text-white flex items-center">
-                  <ShieldCheckIcon className="w-6 h-6 mr-2 text-blue-400" />
-                  Analysis Results
-                </h3>
-                
-                <div className="flex items-center text-sm text-white/70">
-                  <ClockIcon className="w-4 h-4 mr-1" />
-                  {analysisTime}s processing time
+              {/* Analysis Complete Screen */}
+              <AnalysisComplete
+                text={text}
+                categories={results.categories}
+                overallScore={results.overallScore}
+                processingTime={analysisTime}
+                wordCount={text.split(' ').length}
+              />
+
+              {/* Detailed Results */}
+              <div className="glass-card rounded-lg p-6 border border-white/20">
+                <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+                  <h3 className="text-xl font-semibold text-white flex items-center">
+                    <ShieldCheckIcon className="w-6 h-6 mr-2 text-blue-400" />
+                    Detailed Analysis Results
+                  </h3>
+                  
+                  <div className="flex items-center text-sm text-white/70">
+                    <ClockIcon className="w-4 h-4 mr-1" />
+                    {analysisTime}s processing time
+                  </div>
                 </div>
-              </div>
 
-              <div className="mb-6">
-                <ToxicityMeter score={results.overallScore / 100} />
-              </div>
+                <div className="mb-6">
+                  <ToxicityMeter score={results.overallScore / 100} />
+                </div>
 
-              <div className="glass-card p-4 mb-6 border border-white/20">
-                <h4 className="font-medium text-white mb-2">Analyzed Text:</h4>
-                <p className="text-white/80 italic">
-                  "{text.length > 200 ? `${text.substring(0, 200)}...` : text}"
-                </p>
-              </div>
+                {/* Simple text display */}
+                <div className="glass-card p-4 mb-6 border border-white/20">
+                  <h4 className="font-medium text-white mb-2">Analyzed Text:</h4>
+                  <p className="text-white/80 italic">
+                    "{text.length > 200 ? `${text.substring(0, 200)}...` : text}"
+                  </p>
+                </div>
 
-              <div>
-                <h4 className="font-medium text-white mb-4">Category Breakdown:</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Object.entries(results.categories).map(([category, score]) => {
-                    const percentage = Math.round(score); 
-                    
-                    let colorClass = 'text-green-400 bg-green-400/20';
-                    if (percentage > 75) {
-                      colorClass = 'text-red-400 bg-red-400/20';
-                    } else if (percentage > 40) {
-                      colorClass = 'text-yellow-400 bg-yellow-400/20';
-                    }
+                <div>
+                  <h4 className="font-medium text-white mb-4">Category Breakdown:</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {Object.entries(results.categories).map(([category, score]) => {
+                      const percentage = Math.round(score); 
+                      
+                      let colorClass = 'text-green-400 bg-green-400/20';
+                      if (percentage > 75) {
+                        colorClass = 'text-red-400 bg-red-400/20';
+                      } else if (percentage > 40) {
+                        colorClass = 'text-yellow-400 bg-yellow-400/20';
+                      }
 
-                    return (
-                      <div key={category} className="glass-card p-4 text-center border border-white/20">
-                        <div className="font-medium text-white mb-2 capitalize">
-                          {category.replace(/_/g, ' ')}
+                      return (
+                        <div key={category} className="glass-card p-4 text-center border border-white/20">
+                          <div className="font-medium text-white mb-2 capitalize">
+                            {category.replace(/_/g, ' ')}
+                          </div>
+                          <div className={`text-2xl font-bold ${colorClass} rounded-full w-16 h-16 flex items-center justify-center mx-auto`}>
+                            {percentage}%
+                          </div>
                         </div>
-                        <div className={`text-2xl font-bold ${colorClass} rounded-full w-16 h-16 flex items-center justify-center mx-auto`}>
-                          {percentage}%
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </motion.div>
