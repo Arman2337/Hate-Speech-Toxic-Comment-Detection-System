@@ -10,32 +10,54 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [freeTrialsUsed, setFreeTrialsUsed] = useState(0);
 
   useEffect(() => {
-  let isMounted = true;
+    let isMounted = true;
 
-  const checkAuth = async () => {
-    try {
-      const { data } = await api.get('/auth/me', { withCredentials: true });
-      if (isMounted) {
-        setUser(data.user);
-        setIsAuthenticated(true);
+    const checkAuth = async () => {
+      try {
+        const { data } = await api.get('/auth/me', { withCredentials: true });
+        if (isMounted) {
+          setUser(data.user);
+          setIsAuthenticated(true);
+        }
+      } catch {
+        if (isMounted) {
+          setUser(null);
+          setIsAuthenticated(false);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
-    } catch {
-      if (isMounted) {
-        setUser(null);
-        setIsAuthenticated(false);
-      }
-    } finally {
-      if (isMounted) {
-        setIsLoading(false);
-      }
+    };
+
+    // Load free trials count from localStorage
+    const savedTrials = localStorage.getItem('freeTrialsUsed');
+    if (savedTrials) {
+      setFreeTrialsUsed(parseInt(savedTrials));
     }
+
+    checkAuth();
+    return () => { isMounted = false; };
+  }, []);
+
+  const incrementFreeTrials = () => {
+    const newCount = freeTrialsUsed + 1;
+    setFreeTrialsUsed(newCount);
+    localStorage.setItem('freeTrialsUsed', newCount.toString());
+    return newCount;
   };
 
-  checkAuth();
-  return () => { isMounted = false; };
-}, []);
+  const getRemainingTrials = () => {
+    return Math.max(0, 2 - freeTrialsUsed);
+  };
+
+  const canAnalyze = () => {
+    return isAuthenticated || freeTrialsUsed < 2;
+  };
 
   const login = async (email, password) => {
     setIsLoading(true);
@@ -72,7 +94,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-
   const logout = async () => {
     await api.post('/auth/logout', {}, { withCredentials: true });
     setUser(null);
@@ -81,7 +102,18 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, isAuthenticated, login, register , logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isLoading, 
+      isAuthenticated, 
+      login, 
+      register, 
+      logout,
+      freeTrialsUsed,
+      incrementFreeTrials,
+      getRemainingTrials,
+      canAnalyze
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,9 +1,10 @@
 // src/pages/Home.jsx
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ShieldCheckIcon, SparklesIcon, ClockIcon, ChartBarIcon, ExclamationTriangleIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
+import { ShieldCheckIcon, SparklesIcon, ClockIcon, ChartBarIcon, ExclamationTriangleIcon, ArrowPathIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 import { useAuth } from '../hooks/useAuth'; // Import useAuth
+import { Link } from 'react-router-dom';
 
 // Components
 import Card from '../components/ui/Card';
@@ -21,8 +22,8 @@ const Home = () => {
   const [results, setResults] = useState(null);
   const [analysisTime, setAnalysisTime] = useState(0);
   const [stats, setStats] = useState({ total: 0, toxic: 0 });
-  const [isLoadingExample, setIsLoadingExample] = useState(false); // --- NEW: State for loading example
-  const { isAuthenticated } = useAuth();
+  const [isLoadingExample, setIsLoadingExample] = useState(false);
+  const { isAuthenticated, freeTrialsUsed, incrementFreeTrials, getRemainingTrials, canAnalyze } = useAuth();
   const { user } = useAuth();
 
   useEffect(() => {
@@ -40,10 +41,14 @@ const Home = () => {
     fetchStats();
   }, []);
 
-
   const handleAnalyze = async () => {
     if (!text.trim()) {
       toast.error('Please enter some text to analyze');
+      return;
+    }
+
+    if (!canAnalyze()) {
+      toast.error('Free trial limit reached. Please login to continue analyzing.');
       return;
     }
 
@@ -51,7 +56,6 @@ const Home = () => {
     const startTime = Date.now();
 
     try {
-      // --- FIX: We no longer send the userId. The backend gets it from the cookie. ---
       const payload = { text };
       const { data: analysisResults } = await api.post('/predict', payload);
       
@@ -60,7 +64,17 @@ const Home = () => {
       setResults(analysisResults);
       setAnalysisTime(((endTime - startTime) / 1000).toFixed(2));
       
-      toast.success('Analysis completed successfully!');
+      // Increment free trials if user is not logged in
+      if (!isAuthenticated) {
+        const newCount = incrementFreeTrials();
+        if (newCount >= 2) {
+          toast.success('Analysis completed! You have used all free trials. Please login to continue.');
+        } else {
+          toast.success(`Analysis completed! You have ${2 - newCount} free trial${2 - newCount === 1 ? '' : 's'} remaining.`);
+        }
+      } else {
+        toast.success('Analysis completed successfully!');
+      }
 
       // If a user is logged in, their analysis was saved, so we should refresh the stats.
       if (isAuthenticated) {
@@ -82,7 +96,6 @@ const Home = () => {
     setAnalysisTime(0);
   };
 
-  // --- UPDATED: Load example from the backend ---
   const loadExample = async () => {
     setIsLoadingExample(true);
     try {
@@ -114,6 +127,8 @@ const Home = () => {
     visible: { opacity: 1, y: 0 }
   };
 
+  const remainingTrials = getRemainingTrials();
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       {/* Hero Section */}
@@ -144,6 +159,28 @@ const Home = () => {
         <motion.p variants={itemVariants} className="text-sm text-white/70 uppercase tracking-wider font-medium">
           Smart Content Moderation
         </motion.p>
+
+        {/* Free Trial Counter */}
+        {!isAuthenticated && (
+          <motion.div variants={itemVariants} className="mt-4">
+            <div className="inline-flex items-center space-x-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
+              <LockClosedIcon className="w-4 h-4 text-yellow-400" />
+              <span className="text-white text-sm">
+                Free Trials: {remainingTrials}/2 remaining
+              </span>
+            </div>
+            {remainingTrials === 0 && (
+              <div className="mt-2">
+                <Link 
+                  to="/login" 
+                  className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Login to Continue
+                </Link>
+              </div>
+            )}
+          </motion.div>
+        )}
       </motion.div>
 
       {/* Main Analyzer Card */}
@@ -164,8 +201,8 @@ const Home = () => {
               value={text}
               onChange={(e) => setText(e.target.value)}
               className="w-full h-40 p-4 border-2 border-white/20 rounded-lg focus:border-blue-400 focus:ring-4 focus:ring-blue-400/20 transition-all duration-300 resize-none text-white placeholder-white/60 bg-white/10 backdrop-blur-sm"
-              placeholder="Type or paste your text here to check for toxic content..."
-              disabled={isAnalyzing}
+              placeholder="Type or paste your text here to check for toxic content... (Supports English, Hindi, and Hinglish)"
+              disabled={isAnalyzing || !canAnalyze()}
             />
             
             <div className="flex justify-between items-center mt-2">
@@ -178,12 +215,17 @@ const Home = () => {
                 </span>
               )}
             </div>
+
+            {/* Language Support Info */}
+            {/* <div className="mt-2 text-xs text-white/60">
+              💡 Supports: English, Hindi, Hinglish (mixed language)
+            </div> */}
           </div>
 
           <div className="flex flex-wrap gap-3 mb-6">
             <Button
               onClick={handleAnalyze}
-              disabled={isAnalyzing || !text.trim()}
+              disabled={isAnalyzing || !text.trim() || !canAnalyze()}
               className="flex-1 sm:flex-none"
               variant="primary"
             >
@@ -216,6 +258,33 @@ const Home = () => {
               {isLoadingExample ? 'Loading...' : 'Load Example'}
             </Button>
           </div>
+
+          {/* Trial Limit Warning */}
+          {!isAuthenticated && remainingTrials === 0 && (
+            <div className="mb-4 p-4 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
+              <div className="flex items-center space-x-2 text-yellow-400">
+                <LockClosedIcon className="w-5 h-5" />
+                <span className="font-medium">Free trial limit reached</span>
+              </div>
+              <p className="text-yellow-300 text-sm mt-1">
+                You've used all 2 free analyses. Please login or register to continue using the service.
+              </p>
+              <div className="mt-3 flex space-x-3">
+                <Link 
+                  to="/login" 
+                  className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm"
+                >
+                  Login
+                </Link>
+                <Link 
+                  to="/register" 
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                >
+                  Register
+                </Link>
+              </div>
+            </div>
+          )}
 
           {isAnalyzing && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -254,36 +323,31 @@ const Home = () => {
               </div>
 
               <div>
-  <h4 className="font-medium text-white mb-4">Category Breakdown:</h4>
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    {Object.entries(results.categories).map(([category, score]) => {
-      const percentage = Math.round(score);
-      
-      // We only change the BACKGROUND color of the circle now
-      let colorClass = 'bg-green-500'; // Using solid colors for the circle now
-      if (percentage > 75) {
-        colorClass = 'bg-red-500';
-      } else if (percentage > 40) {
-        colorClass = 'bg-yellow-500';
-      }
+                <h4 className="font-medium text-white mb-4">Category Breakdown:</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Object.entries(results.categories).map(([category, score]) => {
+                    const percentage = Math.round(score); 
+                    
+                    let colorClass = 'text-green-400 bg-green-400/20';
+                    if (percentage > 75) {
+                      colorClass = 'text-red-400 bg-red-400/20';
+                    } else if (percentage > 40) {
+                      colorClass = 'text-yellow-400 bg-yellow-400/20';
+                    }
 
-      return (
-        // CHANGED: Added bg-black/40, backdrop-blur-sm, and shadow-lg for better separation
-        <div key={category} className="bg-black/40 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20 shadow-lg">
-          <div className="font-medium text-gray-200 mb-3 capitalize"> {/* Use a slightly dimmer white for less important text */}
-            {category.replace(/_/g, ' ')}
-          </div>
-          {/* CHANGED: The text is now always text-white for high contrast. 
-            The background is a solid color for better visibility.
-          */}
-          <div className={`text-2xl font-bold text-white ${colorClass} rounded-full w-20 h-20 flex items-center justify-center mx-auto`}>
-            {percentage}%
-          </div>
-        </div>
-      );
-    })}
-  </div>
-</div>
+                    return (
+                      <div key={category} className="glass-card p-4 text-center border border-white/20">
+                        <div className="font-medium text-white mb-2 capitalize">
+                          {category.replace(/_/g, ' ')}
+                        </div>
+                        <div className={`text-2xl font-bold ${colorClass} rounded-full w-16 h-16 flex items-center justify-center mx-auto`}>
+                          {percentage}%
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </motion.div>
           )}
         </div>
