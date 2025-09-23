@@ -349,8 +349,9 @@ const Home = () => {
                       }
 
                       return (
-                        <div key={category} className="glass-card p-4 text-center border border-white/20">
-                          <div className="font-medium text-white mb-2 capitalize">
+                        <div key={category} className="bg-slate-800 p-4 text-center border border-white/20 rounded-lg">
+                          {/* --- ALSO IMPROVED THIS LINE FOR BETTER VISIBILITY --- */}
+                          <div className="font-bold text-gray-100 mb-3 capitalize">
                             {category.replace(/_/g, ' ')}
                           </div>
                           <div className={`text-2xl font-bold ${colorClass} rounded-full w-16 h-16 flex items-center justify-center mx-auto`}>
