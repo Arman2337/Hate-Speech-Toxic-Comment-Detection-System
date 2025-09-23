@@ -1,191 +1,87 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-// 1. IMPORT THE NEW ICON
-import { CheckCircle, Shield, Clock, FileText, TrendingUp, ShieldAlert } from 'lucide-react';
+import { CheckCircle, ShieldAlert, Clock, FileText, BarChart2 } from 'lucide-react';
 
-const AnalysisComplete = ({ text, categories, overallScore, processingTime, wordCount }) => {
-  // Calculate confidence based on highest category score
-  const confidence = Math.max(...Object.values(categories || {}));
-  const results = {
-    words: wordCount || text?.split(' ').length || 1,
-    confidence: Math.round(confidence) || 6,
-    time: processingTime || "6.21",
-    toxicityLevel: "Low",
-    status: "Safe"
+const AnalysisComplete = ({ overallScore, processingTime, wordCount }) => {
+  const score = Math.round(overallScore);
+
+  // --- DYNAMIC CHANGE 1: Setup dynamic content based on the score ---
+  const isToxic = score > 60; // Set your toxicity threshold
+
+  const status = {
+    icon: isToxic ? ShieldAlert : CheckCircle,
+    iconGradient: isToxic 
+      ? "from-red-500 to-orange-500" 
+      : "from-green-500 to-emerald-500",
+    title: isToxic ? "Toxicity Detected" : "Content Clear",
+    titleGradient: isToxic 
+      ? "from-red-400 to-orange-400" 
+      : "from-green-400 to-cyan-400",
+    subtitle: isToxic 
+      ? "This content has been flagged for potentially harmful language." 
+      : "Content has been successfully analyzed and appears safe.",
+    meterColor: isToxic ? "bg-red-500" : "bg-green-500",
   };
 
-  // 2. DEFINE SAFETY LOGIC AND DYNAMIC STYLES
-  const TOXICITY_THRESHOLD = 75; // Set your threshold here
-  const isToxic = overallScore > TOXICITY_THRESHOLD;
-
-  const badgeStyles = isToxic
-    ? "bg-red-500/20 border-red-500/30 text-red-400"
-    : "bg-green-500/20 border-green-500/30 text-green-400";
-  
-  const badgeText = isToxic ? "Toxicity Detected" : "Content Safe";
-  const BadgeIcon = isToxic ? ShieldAlert : Shield;
-
-
   return (
-    <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
-      {/* Main Results Card */}
+    <div className="w-full max-w-2xl mx-auto p-4 sm:p-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="glass-card bg-slate-800/80 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-8 shadow-2xl"
+        transition={{ duration: 0.6, staggerChildren: 0.15 }}
+        className="bg-slate-800/80 backdrop-blur-lg border border-slate-700/50 rounded-2xl p-6 sm:p-8 shadow-2xl"
       >
-        {/* Header, Status Text, Progress Bar, and Stats Grid remain the same... */}
-        
-        {/* Header with Success Icon */}
-        <div className="flex items-center justify-center mb-6">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-            className="relative"
-          >
-            {/* Outer Glow Ring */}
-            <motion.div
-              className="absolute inset-0 w-20 h-20 rounded-full bg-gradient-to-r from-green-400 via-emerald-500 to-green-600 opacity-30"
-              animate={{
-                scale: [1, 1.1, 1],
-                opacity: [0.3, 0.5, 0.3]
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-            />
-            
-            {/* Middle Ring */}
-            <motion.div
-              className="absolute inset-1 w-18 h-18 rounded-full bg-gradient-to-r from-green-500 via-emerald-500 to-green-500 opacity-40"
-              animate={{
-                scale: [1, 1.05, 1],
-                opacity: [0.4, 0.6, 0.4]
-              }}
-              transition={{
-                duration: 2.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 0.5
-              }}
-            />
+        {/* --- DYNAMIC CHANGE 2: Header Icon is now dynamic --- */}
+        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex justify-center mb-6">
+          <div className={`w-20 h-20 bg-gradient-to-br ${status.iconGradient} rounded-full flex items-center justify-center shadow-lg`}>
+            <status.icon className="w-10 h-10 text-white" />
+          </div>
+        </motion.div>
 
-            {/* Main Icon Container */}
-            <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg relative z-10">
-              <CheckCircle className="w-10 h-10 text-white" />
-            </div>
-            
-            {/* Background blur effect */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full opacity-20 blur-lg"></div>
-          </motion.div>
-        </div>
-
-        {/* Status Text */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="text-center mb-8"
-        >
-          <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 mb-3">
-            Analysis Complete
+        {/* --- DYNAMIC CHANGE 3: Title and Subtitle are now dynamic --- */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center mb-8">
+          <h2 className={`text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r ${status.titleGradient} mb-2`}>
+            {status.title}
           </h2>
-          <p className="text-slate-300 text-lg">
-            Content has been successfully analyzed for toxicity
-          </p>
+          <p className="text-slate-300">{status.subtitle}</p>
         </motion.div>
 
-        {/* Progress Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="mb-8"
-        >
-          <div className="w-full h-3 bg-slate-700 rounded-full overflow-hidden">
+        {/* --- DYNAMIC CHANGE 4: This is now a "Toxicity Meter", not a progress bar --- */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8">
+          <div className="w-full h-3 bg-slate-700 rounded-full">
             <motion.div
-              className="h-full bg-gradient-to-r from-green-500 via-blue-500 to-purple-500 rounded-full shadow-lg"
+              className={`h-full rounded-full ${status.meterColor}`}
               initial={{ width: "0%" }}
-              animate={{ width: "100%" }}
-              transition={{
-                duration: 1.5,
-                delay: 0.8,
-                ease: "easeOut"
-              }}
+              animate={{ width: `${score}%` }} // Width is now the actual score
+              transition={{ duration: 1, ease: "easeOut" }}
             />
           </div>
         </motion.div>
 
-        {/* Stats Grid */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9 }}
-          className="grid grid-cols-3 gap-6 mb-8"
-        >
+        {/* --- DYNAMIC CHANGE 5: Stats are now clear, readable, and have better labels --- */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-3 gap-4 sm:gap-6">
           {/* Words */}
-          <div className="text-center p-4 bg-slate-700/30 rounded-xl border border-slate-600/30">
-            <div className="flex items-center justify-center mb-2">
-              <FileText className="w-5 h-5 text-blue-400 mr-2" />
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.5, delay: 1.2, type: "spring" }}
-                className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500"
-              >
-                {results.words}
-              </motion.span>
-            </div>
-            <p className="text-slate-400 text-sm uppercase tracking-wide">Words</p>
+          <div className="text-center p-4 bg-slate-700/50 rounded-xl">
+            <FileText className="w-6 h-6 text-blue-400 mx-auto mb-2" />
+            {/* REMOVED GRADIENT FOR READABILITY */}
+            <span className="text-2xl font-bold text-slate-100">{wordCount}</span>
+            <p className="text-slate-400 text-xs uppercase tracking-wide mt-1">Words</p>
           </div>
 
-          {/* Confidence */}
-          <div className="text-center p-4 bg-slate-700/30 rounded-xl border border-slate-600/30">
-            <div className="flex items-center justify-center mb-2">
-              <TrendingUp className="w-5 h-5 text-purple-400 mr-2" />
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.5, delay: 1.4, type: "spring" }}
-                className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500"
-              >
-                {results.confidence}%
-              </motion.span>
-            </div>
-            <p className="text-slate-400 text-sm uppercase tracking-wide">Confidence</p>
+          {/* Toxicity Score */}
+          <div className="text-center p-4 bg-slate-700/50 rounded-xl">
+            <BarChart2 className={`w-6 h-6 mx-auto mb-2 ${isToxic ? 'text-red-400' : 'text-green-400'}`} />
+            {/* RENAMED "Confidence", REMOVED GRADIENT */}
+            <span className={`text-2xl font-bold ${isToxic ? 'text-red-400' : 'text-green-400'}`}>{score}%</span>
+            <p className="text-slate-400 text-xs uppercase tracking-wide mt-1">Toxicity Score</p>
           </div>
 
           {/* Time */}
-          <div className="text-center p-4 bg-slate-700/30 rounded-xl border border-slate-600/30">
-            <div className="flex items-center justify-center mb-2">
-              <Clock className="w-5 h-5 text-green-400 mr-2" />
-              <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.5, delay: 1.6, type: "spring" }}
-                className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-blue-500 to-purple-500"
-              >
-                {results.time}s
-              </motion.span>
-            </div>
-            <p className="text-slate-400 text-sm uppercase tracking-wide">Time</p>
-          </div>
-        </motion.div>
-
-        {/* 3. UPDATED DYNAMIC SAFETY BADGE */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 1.8, type: "spring" }}
-          className="flex items-center justify-center"
-        >
-          <div className={`flex items-center rounded-full px-6 py-3 ${badgeStyles}`}>
-            <BadgeIcon className="w-5 h-5 mr-2" />
-            <span className="font-semibold">{badgeText}</span>
+          <div className="text-center p-4 bg-slate-700/50 rounded-xl">
+            <Clock className="w-6 h-6 text-cyan-400 mx-auto mb-2" />
+            {/* REMOVED GRADIENT FOR READABILITY */}
+            <span className="text-2xl font-bold text-slate-100">{processingTime}s</span>
+            <p className="text-slate-400 text-xs uppercase tracking-wide mt-1">Time</p>
           </div>
         </motion.div>
 
