@@ -1,47 +1,51 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 
-const Button = ({ 
-  children, 
-  variant = 'primary', 
-  size = 'md', 
-  disabled = false, 
-  className = '', 
-  ...props 
-}) => {
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-4 disabled:opacity-50 disabled:cursor-not-allowed';
-  
-  const variants = {
-    primary: 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl focus:ring-blue-300',
-    secondary: 'bg-gray-100 hover:bg-gray-200 text-gray-800 focus:ring-gray-300',
-    outline: 'border-2 border-gray-300 hover:border-gray-400 text-gray-700 bg-white hover:bg-gray-50 focus:ring-gray-300',
-    danger: 'bg-red-500 hover:bg-red-600 text-white shadow-lg hover:shadow-xl focus:ring-red-300',
-    success: 'bg-green-500 hover:bg-green-600 text-white shadow-lg hover:shadow-xl focus:ring-green-300'
-  };
-  
-  const sizes = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-6 py-3 text-base',
-    xl: 'px-8 py-4 text-lg'
-  };
+const Button = ({ children, variant = 'primary', size = 'md', onClick, disabled, className = '', ...props }) => {
+    // Base styles for all buttons
+    const baseStyle = `
+        inline-flex items-center justify-center font-semibold rounded-lg 
+        transition-all duration-200 ease-in-out 
+        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 
+        disabled:opacity-50 disabled:cursor-not-allowed
+    `;
 
-  return (
-    <motion.button
-      whileHover={{ scale: disabled ? 1 : 1.05 }}
-      whileTap={{ scale: disabled ? 1 : 0.95 }}
-      className={`
-        ${baseClasses}
-        ${variants[variant]}
-        ${sizes[size]}
+    // Size styles
+    const sizeStyles = {
+        sm: 'px-3 py-1.5 text-sm',
+        md: 'px-4 py-2 text-base',
+        lg: 'px-6 py-3 text-lg',
+        icon: 'p-2 rounded-full', // Ensure padding and rounded shape
+    };
+
+    // Variant styles - **Make sure 'icon' variant has visible styles**
+    const variantStyles = {
+        primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
+        secondary: 'bg-gray-700 text-white hover:bg-gray-600 focus:ring-gray-500',
+        outline: 'bg-transparent border-2 border-white/40 text-white/80 hover:bg-white/10 hover:border-white/60 focus:ring-white/50',
+        icon: `
+            bg-white/5 text-white/60 
+            hover:bg-white/10 hover:text-white 
+            focus:ring-blue-500 focus:bg-white/10 focus:text-white 
+        `, // Styles for visibility on dark background
+    };
+
+    const combinedClassName = `
+        ${baseStyle} 
+        ${sizeStyles[size] || sizeStyles.md} 
+        ${variantStyles[variant] || variantStyles.primary} 
         ${className}
-      `}
-      disabled={disabled}
-      {...props}
-    >
-      {children}
-    </motion.button>
-  );
+    `;
+
+    return (
+        <button
+            onClick={onClick}
+            disabled={disabled}
+            className={combinedClassName.trim()}
+            {...props} // Pass any other props like 'type'
+        >
+            {children}
+        </button>
+    );
 };
 
 export default Button;
