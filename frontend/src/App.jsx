@@ -18,6 +18,7 @@ import Dashboard from './pages/Dashboard';
 import History from './pages/History';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Analyzer from './pages/Analyzer';
 
 // Styles
 import './styles/globals.css';
@@ -50,6 +51,7 @@ function App() {
             <main className="pt-20 min-h-screen relative z-10">
               <Routes>
                 <Route path="/" element={<Home />} />
+                <Route path="/analyzer" element={<Analyzer />} />
                 <Route
                   path="/dashboard"
                   element={

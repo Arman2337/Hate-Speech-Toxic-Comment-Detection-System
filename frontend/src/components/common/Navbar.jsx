@@ -29,7 +29,7 @@ const Navbar = () => {
   }, []);
 
   const navigation = [
-    { name: 'Analyzer', href: '/', icon: ShieldCheckIcon },
+    { name: 'Analyzer', href: '/analyzer', icon: ShieldCheckIcon },
     { name: 'Dashboard', href: '/dashboard', icon: ChartBarIcon },
     { name: 'History', href: '/history', icon: ClockIcon },
   ];
