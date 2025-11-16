@@ -294,7 +294,6 @@ const Analyzer = () => {
                             <AIAnalysisLoader />
                         </motion.div>
                     )}
-
                     {results && !isAnalyzing && (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
