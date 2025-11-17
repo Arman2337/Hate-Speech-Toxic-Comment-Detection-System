@@ -136,13 +136,13 @@ The app will open at http://localhost:5173.
 ```bash
 cd ml
 ```
-###2.Create a Python virtual environment (recommended):
+### 2.Create a Python virtual environment (recommended):
 
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
-###3.Install the required Python packages:
+### 3.Install the required Python packages:
 
 ```bash
 pip install -r requirements.txt
